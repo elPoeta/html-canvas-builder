@@ -1,0 +1,220 @@
+@tailwind base;
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary) var(--primary);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+    width: 20px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--primary);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--secondary);
+    border-radius: 14px;
+    border: 3px solid var(--primary);
+}
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+    height: 100dvh;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+@layer base {
+    :root {
+        /* CSS: .bg-gradient { background: var(--gradient) } */
+        --gradient: linear-gradient(to top left, #004680, #4484ba);
+        --background: 220 100% 98.5%;
+        --foreground: 220 10% 1%;
+
+        --muted: 220 10% 92.5%;
+        --muted-foreground: 220 5% 42.5%;
+
+        --popover: 220 34% 92.5%;
+        --popover-foreground: 220 10% 1.25%;
+
+        --card: 220 34% 92.5%;
+        --card-foreground: 220 10% 1.25%;
+
+        --border: 220 15% 90%;
+        --input: 220 15% 90%;
+
+        --primary: 220 100% 25%;
+        --primary-foreground: 220 2% 92.5%;
+
+        --secondary: 220 74% 85%;
+        --secondary-foreground: 220 7% 12.5%;
+
+        --accent: 220 74% 85%;
+        --accent-foreground: 220 7% 12.5%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+
+        --ring: 220 100% 25%;
+
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        /* CSS: .bg-gradient { background: var(--gradient) } */
+        --gradient: linear-gradient(to top left, #7de2fc, #b9b6e5);
+
+        --background: 204 61.75% 5.92%;
+        --foreground: 204 9.5% 98.7%;
+
+        --muted: 204 47.5% 30.34%;
+        --muted-foreground: 204 9.5% 57.4%;
+
+        --popover: 204 46% 9.62%;
+        --popover-foreground: 204 9.5% 98.7%;
+
+        --card: 204 46% 9.62%;
+        --card-foreground: 204 9.5% 98.7%;
+
+        --border: 204 47.5% 30.34%;
+        --input: 204 47.5% 30.34%;
+
+        --primary: 204 95% 74%;
+        --primary-foreground: 204 9.5% 7.4%;
+
+        --secondary: 204 47.5% 30.34%;
+        --secondary-foreground: 204 9.5% 98.7%;
+
+        --accent: 204 47.5% 30.34%;
+        --accent-foreground: 204 9.5% 98.7%;
+
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 204 9.5% 98.7%;
+
+        --ring: 204 95% 74%;
+    }
+}
+
+@font-face {
+    font-family: Ubuntu, Sniglet, Raleway, sans-serif, system-ui;
+    /* font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&family=Sniglet:wght@400;800&display=swap);
+    */
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html {
+        font-family: "Ubuntu", "Raleway", "Sniglet", system-ui, sans-serif;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
+
+.bg-gradient {
+    background: var(--gradient);
+}
+
+.dotPattern {
+    background-image: radial-gradient(rgb(35, 40, 68) 1px, transparent 1px);
+    background-size: 25px 25px;
+}
+
+.use-automation-zoom-in {
+    animation: automation-zoom-in 0.5s;
+}
+
+@keyframes automation-zoom-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-marquee:hover {
+    animation-play-state: paused;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-200%);
+    }
+}
+
+.animate-marquee {
+    animation: marquee 40s linear infinite;
+}
+
+@keyframes typing {
+    0% {
+        width: 0%;
+        visibility: hidden;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+@keyframes blink {
+    50% {
+        border-color: transparent;
+    }
+    100% {
+        border-color: white;
+    }
+}
+
+.animate-typing {
+    animation:
+        typing 2s steps(20) infinite alternate,
+        blink 0.7s infinite;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+}
