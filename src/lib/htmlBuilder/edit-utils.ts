@@ -217,3 +217,12 @@ export const moveNodeInTree = (
     n.children = newChildren;
   });
 };
+
+export const findVNodeById = (node: VNode, id: string): VNode | null => {
+  if (node.id === id) return node;
+  for (const child of node.children) {
+    const found = findVNodeById(child, id);
+    if (found) return found;
+  }
+  return null;
+};

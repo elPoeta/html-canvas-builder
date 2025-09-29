@@ -23,6 +23,10 @@ export const escapeHtml = (str: string): string => {
     .replace(/'/g, "&#039;");
 };
 
+export const escapeAttrValue = (value: string): string => {
+  return String(value).replace(/"/g, "&quot;");
+};
+
 /**
  * Agrupa un array de objetos por una propiedad dada.
  * @example

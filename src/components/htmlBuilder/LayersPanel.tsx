@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/ContextMenu";
 import { Block, VNode } from "@/lib/types/htmlBuilder.types";
 import { BLOCKS } from "@/lib/htmlBuilder/blocks";
+import { useEffect } from "react";
 
 // Type definitions
 type LayerItem = {
@@ -107,6 +108,18 @@ export const LayersPanel = ({
   onImportHtml,
   blocksByCategory,
 }: LayersPanelProps) => {
+  useEffect(() => {
+    if (!selectedId) return;
+
+    const el = document.querySelector(`[data-node-id="${selectedId}"]`);
+    if (el) {
+      // Use requestAnimationFrame to ensure DOM is painted
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+  }, [selectedId]);
+
   const renderLayerActions = (
     layer: LayerItem,
     canMoveUp: boolean,

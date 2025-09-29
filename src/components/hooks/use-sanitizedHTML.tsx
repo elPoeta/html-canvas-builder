@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { DynamicHandlerMap } from "@/providers/webEditor/webEditor-provider";
+import { DynamicHandlerMap } from "@/lib/types/htmlBuilder.types";
 import DOMPurify, { Config } from "dompurify";
 import { useEffect, useMemo, useRef, useCallback } from "react";
 
-const DEFAULT_OPTIONS: Config = {
+export const DEFAULT_OPTIONS: Config = {
   ALLOWED_TAGS: [
     "main",
     "div",

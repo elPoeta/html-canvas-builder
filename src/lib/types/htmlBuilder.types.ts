@@ -1,4 +1,4 @@
-// src/types/builder.types.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type VNode = {
   id: string;
@@ -62,3 +62,22 @@ export type TailwindCatalog = {
   overflow: TailwindClass[];
   transforms: TailwindClass[];
 };
+
+export type CommonWebEditorContent = {
+  id: string;
+  disabled: boolean;
+};
+
+export interface DynamicHandlerMap {
+  [elementId: string]: {
+    [eventType: string]: string; // handler code as string
+  };
+}
+
+export type HtmlWebEditorContent = {
+  enableEvents: boolean;
+  source: string;
+  classNames: string;
+  dynamicHandlers?: DynamicHandlerMap;
+  eventContext?: Record<string, any>;
+} & CommonWebEditorContent;

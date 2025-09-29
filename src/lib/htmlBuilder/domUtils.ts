@@ -182,3 +182,69 @@ export function vnodeToHtml(v: VNode, explicitClosing = false): string {
   // Fallback (non-void, no content)
   return `${tagStart}${tagEnd}`;
 }
+
+const safeDecodeURIComponent = (str: string): string => {
+  try {
+    return decodeURIComponent(str);
+  } catch (e) {
+    // If decoding fails, return original (it's probably not encoded)
+    return str;
+  }
+};
+
+export const vnodeToEditableHtml = (
+  node: VNode,
+  isEditable: boolean,
+): string => {
+  const attrs: string[] = [`data-node="${node.id}"`];
+
+  for (const [key, value] of Object.entries(node.attrs || {})) {
+    if (value == null || value === false) continue;
+
+    if (value === true) {
+      attrs.push(key);
+    } else {
+      // Escape attribute values as HTML (not URL!)
+      attrs.push(`${key}="${escapeHtml(String(value))}"`);
+    }
+  }
+
+  // Handle text content
+  let finalText = "";
+  if (node.text != null) {
+    // First, try to decode if it's URL-encoded
+    finalText = safeDecodeURIComponent(String(node.text));
+  }
+
+  // Make text containers editable
+  if (isEditable && node.text != null) {
+    if (!attrs.includes("contenteditable")) {
+      attrs.push("contenteditable");
+    }
+
+    const existingClass = node.attrs?.class || "";
+    const classes = `${existingClass} ce-editable`.trim();
+    const classAttrIndex = attrs.findIndex((a) => a.startsWith("class="));
+    if (classAttrIndex >= 0) {
+      attrs[classAttrIndex] = `class="${escapeHtml(classes)}"`;
+    } else {
+      attrs.push(`class="${escapeHtml(classes)}"`);
+    }
+  }
+
+  const attrStr = attrs.length ? " " + attrs.join(" ") : "";
+
+  if (node.text != null) {
+    return `<${node.tag}${attrStr}>${escapeHtml(finalText)}</${node.tag}>`;
+  }
+
+  if (VOID_TAGS.has(node.tag)) {
+    return `<${node.tag}${attrStr}>`;
+  }
+
+  const children = node.children
+    .map((child) => vnodeToEditableHtml(child, isEditable))
+    .join("");
+
+  return `<${node.tag}${attrStr}>${children}</${node.tag}>`;
+};

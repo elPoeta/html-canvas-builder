@@ -44,15 +44,7 @@ const DEFAULT_HTML = `
     </div>
   </div>
   <hr/>
-  <div class="absolute animate-pulse">
-     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-satellite w-12 h-12 text-blue-400 opacity-60">
-        <path d="M13 7 9 3 5 7l4 4"></path>
-        <path d="m17 11 4 4-4 4-4-4"></path>
-        <path d="m8 12 4 4 6-6-4-4Z"></path>
-        <path d="m16 8 3-3"></path>
-        <path d="M9 21a6 6 0 0 0-6-6"></path>
-     </svg>
-  </div>
+
 </section>`;
 
 import { useEffect, useMemo, useState } from "react";
@@ -101,24 +93,70 @@ export default function HtmlCanvasBuilder() {
     // loadProject: loadProjectHook,
   } = useProjects();
 
+  // useEffect(() => {
+  //   if (!selectedId) return;
+
+  //   const layerElement = document.querySelector(
+  //     `[data-node-id="${selectedId}"]`,
+  //   );
+  //   const canvasElement = document.querySelector(`[data-node="${selectedId}"]`);
+
+  //   if (layerElement) {
+  //     setTimeout(() => {
+  //       layerElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  //     }, 50);
+  //   }
+
+  //   if (canvasElement) {
+  //     setTimeout(() => {
+  //       canvasElement.scrollIntoView({ behavior: "smooth", block: "center" });
+  //     }, 50);
+  //   }
+  // }, [selectedId]);
+
   useEffect(() => {
     if (!selectedId) return;
 
-    const layerElement = document.querySelector(
-      `[data-node-id="${selectedId}"]`,
-    );
-    const canvasElement = document.querySelector(`[data-node="${selectedId}"]`);
+    const scrollToElement = (
+      selector: string,
+      align: ScrollLogicalPosition = "nearest",
+    ) => {
+      const el = document.querySelector(selector);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const isVisible =
+          rect.top >= 0 &&
+          rect.bottom <= window.innerHeight &&
+          rect.left >= 0 &&
+          rect.right <= window.innerWidth;
+        if (!isVisible) {
+          el.scrollIntoView({
+            behavior: "smooth",
+            block: align,
+            inline: "nearest",
+          });
+        }
+      }
+    };
 
-    if (layerElement) {
-      setTimeout(() => {
-        layerElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }, 50);
-    }
+    // Defer to next frame to ensure DOM is updated
+    const timer = requestAnimationFrame(() => {
+      scrollToElement(`[data-node-id="${selectedId}"]`, "center");
+      scrollToElement(`[data-node="${selectedId}"]`, "center");
+    });
 
-    if (canvasElement) {
-      setTimeout(() => {
-        canvasElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 50);
+    return () => cancelAnimationFrame(timer);
+  }, [selectedId]);
+
+  useEffect(() => {
+    console.log("Selected ID changed:", selectedId);
+    if (!selectedId) return;
+    const layerEl = document.querySelector(`[data-node-id="${selectedId}"]`);
+    console.log("Found layer element:", layerEl);
+    if (layerEl) {
+      requestAnimationFrame(() =>
+        layerEl.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      );
     }
   }, [selectedId]);
 
