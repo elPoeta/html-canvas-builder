@@ -14,7 +14,7 @@ export function domToVNode(
     if (!text) return null;
     return {
       id: uid(),
-      tag: "span",
+      tag: "text", // pseudo-tag para texto puro
       attrs: {},
       children: [],
       text,
@@ -24,6 +24,7 @@ export function domToVNode(
       height: 20,
     };
   }
+
   if (node.nodeType !== Node.ELEMENT_NODE) return null;
   const el = node as Element;
   const attrs: Record<string, string> = {};
@@ -47,6 +48,23 @@ export function domToVNode(
   };
 }
 
+// export function htmlToVNodeTree(html: string): VNode {
+//   const parser = new DOMParser();
+//   const doc = parser.parseFromString(html, "text/html");
+//   const wrapper = document.createElement("div");
+//   Array.from(doc.body.childNodes).forEach((n) =>
+//     wrapper.appendChild(n.cloneNode(true)),
+//   );
+//   const v = domToVNode(wrapper, 0, 0);
+//   if (!v) throw new Error("No se pudo parsear el HTML");
+//   v.tag = "div";
+//   v.attrs = { ...v.attrs, class: (v.attrs.class || "") + " relative" };
+//   v.width = 1200;
+//   v.height = 800;
+//   console.log("HTML parsed successfully", v);
+//   return v;
+// }
+
 export function htmlToVNodeTree(html: string): VNode {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
@@ -60,5 +78,17 @@ export function htmlToVNodeTree(html: string): VNode {
   v.attrs = { ...v.attrs, class: (v.attrs.class || "") + " relative" };
   v.width = 1200;
   v.height = 800;
+
+  // 🔥 Distribuir hijos del root verticalmente
+  let yOffset = 40;
+  v.children = v.children.map((child) => {
+    const newNode = { ...child };
+    if (newNode.x === 0 && newNode.y === 0) {
+      newNode.y = yOffset;
+      yOffset += (newNode.height || 100) + 20;
+    }
+    return newNode;
+  });
+
   return v;
 }

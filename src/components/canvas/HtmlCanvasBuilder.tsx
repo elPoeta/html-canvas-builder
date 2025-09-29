@@ -92,6 +92,7 @@ export function HtmlCanvasBuilder() {
   const [draggedBlockIndex, setDraggedBlockIndex] = useState<number | null>(
     null,
   );
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragData = useRef<{
     nodeIds: string[];
@@ -100,6 +101,14 @@ export function HtmlCanvasBuilder() {
     originalPositions: Map<string, { x: number; y: number }>;
   } | null>(null);
 
+  const [isResizingElement, setIsResizingElement] = useState(false);
+  const resizeData = useRef<{
+    nodeId: string;
+    handle: string;
+    startX: number;
+    startY: number;
+    original: { x: number; y: number; width: number; height: number };
+  } | null>(null);
   // Derived state
   const selectedNodes = useMemo(
     () =>
@@ -115,13 +124,16 @@ export function HtmlCanvasBuilder() {
   );
 
   // === History ===
-  const pushHistory = (next: VNode) => {
-    setHistory((h) => [...h, tree]);
-    setFuture([]);
-    setTree(next);
-  };
+  const pushHistory = useCallback(
+    (next: VNode) => {
+      setHistory((h) => [...h, tree]);
+      setFuture([]);
+      setTree(next);
+    },
+    [setHistory, setFuture, setTree, tree],
+  );
 
-  const undo = () => {
+  const undo = useCallback(() => {
     setHistory((h) => {
       if (!h.length) return h;
       const prev = h[h.length - 1];
@@ -129,9 +141,9 @@ export function HtmlCanvasBuilder() {
       setTree(prev);
       return h.slice(0, -1);
     });
-  };
+  }, [setHistory, setFuture, setTree, tree]);
 
-  const redo = () => {
+  const redo = useCallback(() => {
     setFuture((f) => {
       if (!f.length) return f;
       const next = f[0];
@@ -139,7 +151,7 @@ export function HtmlCanvasBuilder() {
       setTree(next);
       return f.slice(1);
     });
-  };
+  }, [setHistory, setFuture, setTree, tree]);
 
   // === Canvas Interaction ===
   const handleCanvasMouseDown = useCallback(
@@ -250,6 +262,42 @@ export function HtmlCanvasBuilder() {
         });
         setTree(newTree);
         setGuides(currentGuides);
+        if (resizeHandle) {
+          const [nodeId, handle] = resizeHandle.split(":");
+          const node = findNode(tree, nodeId);
+          console.log(node);
+          if (!node) return;
+
+          const deltaX = (e.clientX - dragData.current?.startX!) / zoom;
+          const deltaY = (e.clientY - dragData.current?.startY!) / zoom;
+
+          let newWidth = node.width || 100;
+          let newHeight = node.height || 100;
+          let newX = node.x;
+          let newY = node.y;
+
+          if (handle.includes("e")) newWidth += deltaX;
+          if (handle.includes("s")) newHeight += deltaY;
+          if (handle.includes("w")) {
+            newWidth -= deltaX;
+            newX += deltaX;
+          }
+          if (handle.includes("n")) {
+            newHeight -= deltaY;
+            newY += deltaY;
+          }
+
+          setTree(
+            updateNode(tree, nodeId, (n) => {
+              n.width = Math.max(20, newWidth);
+              n.height = Math.max(20, newHeight);
+              n.x = newX;
+              n.y = newY;
+            }),
+          );
+
+          return; // 👈 detener aquí para que no ejecute la lógica de drag
+        }
       } else if (isSelecting && selectionBox && canvasRef.current) {
         const canvasRect = canvasRef.current.getBoundingClientRect();
         const endX = (e.clientX - canvasRect.left) / zoom;
@@ -282,8 +330,21 @@ export function HtmlCanvasBuilder() {
       showGuides,
       gridSize,
       allNodes,
+      resizeHandle,
     ],
   );
+
+  // const handleCanvasMouseUp = useCallback(() => {
+  //   if (isDragging) {
+  //     setIsDragging(false);
+  //     dragData.current = null;
+  //     setGuides({ x: [], y: [] });
+  //   }
+  //   if (isSelecting) {
+  //     setIsSelecting(false);
+  //     setSelectionBox(null);
+  //   }
+  // }, [isDragging, isSelecting]);
 
   const handleCanvasMouseUp = useCallback(() => {
     if (isDragging) {
@@ -295,7 +356,107 @@ export function HtmlCanvasBuilder() {
       setIsSelecting(false);
       setSelectionBox(null);
     }
-  }, [isDragging, isSelecting]);
+    if (resizeHandle) {
+      setResizeHandle(null);
+    }
+  }, [isDragging, isSelecting, resizeHandle]);
+
+  useEffect(() => {
+    const handleResizeMouseMove = (e: MouseEvent) => {
+      if (!isResizingElement || !resizeData.current || !canvasRef.current)
+        return;
+      const { nodeId, handle, startX, startY, original } = resizeData.current;
+      const deltaX = (e.clientX - startX) / zoom;
+      const deltaY = (e.clientY - startY) / zoom;
+
+      let newTree = tree;
+      newTree = updateNode(newTree, nodeId, (node) => {
+        const newWidth = Math.max(
+          20,
+          original.width +
+            (handle.includes("e")
+              ? deltaX
+              : handle.includes("w")
+                ? -deltaX
+                : 0),
+        );
+        const newHeight = Math.max(
+          20,
+          original.height +
+            (handle.includes("s")
+              ? deltaY
+              : handle.includes("n")
+                ? -deltaY
+                : 0),
+        );
+        let newX = node.x;
+        let newY = node.y;
+
+        if (handle.includes("w"))
+          newX = original.x + (original.width - newWidth);
+        if (handle.includes("n"))
+          newY = original.y + (original.height - newHeight);
+
+        if (snap) {
+          newX = snapToGrid(newX, gridSize);
+          newY = snapToGrid(newY, gridSize);
+          // Ajustar tamaño al grid también (opcional)
+          // newWidth = snapToGrid(newWidth, gridSize);
+          // newHeight = snapToGrid(newHeight, gridSize);
+        }
+
+        node.x = newX;
+        node.y = newY;
+        node.width = newWidth;
+        node.height = newHeight;
+      });
+
+      setTree(newTree);
+    };
+
+    const handleResizeMouseUp = () => {
+      if (isResizingElement) {
+        setIsResizingElement(false);
+        resizeData.current = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    };
+
+    if (isResizingElement) {
+      document.addEventListener("mousemove", handleResizeMouseMove);
+      document.addEventListener("mouseup", handleResizeMouseUp);
+      document.body.style.cursor = "ew-resize";
+      if (
+        resizeData.current?.handle.includes("n") ||
+        resizeData.current?.handle.includes("s")
+      ) {
+        document.body.style.cursor = "ns-resize";
+      }
+      if (
+        (resizeData.current?.handle.includes("n") &&
+          resizeData.current?.handle.includes("w")) ||
+        (resizeData.current?.handle.includes("s") &&
+          resizeData.current?.handle.includes("e"))
+      ) {
+        document.body.style.cursor = "nwse-resize";
+      }
+      if (
+        (resizeData.current?.handle.includes("n") &&
+          resizeData.current?.handle.includes("e")) ||
+        (resizeData.current?.handle.includes("s") &&
+          resizeData.current?.handle.includes("w"))
+      ) {
+        document.body.style.cursor = "nesw-resize";
+      }
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleResizeMouseMove);
+      document.removeEventListener("mouseup", handleResizeMouseUp);
+    };
+  }, [isResizingElement, tree, zoom, snap, gridSize]);
 
   useEffect(() => {
     if (isDragging || isSelecting) {
@@ -324,22 +485,147 @@ export function HtmlCanvasBuilder() {
     e.dataTransfer.dropEffect = "copy";
   };
 
+  // const handleCanvasDrop = (e: React.DragEvent) => {
+  //   e.preventDefault();
+  //   if (draggedBlockIndex === null || !canvasRef.current) return;
+  //   const canvasRect = canvasRef.current.getBoundingClientRect();
+  //   const x = Math.max(0, (e.clientX - canvasRect.left) / zoom);
+  //   const y = Math.max(0, (e.clientY - canvasRect.top) / zoom);
+  //   const newNode = BLOCKS[draggedBlockIndex].make();
+  //   newNode.x = snap ? snapToGrid(x, gridSize) : x;
+  //   newNode.y = snap ? snapToGrid(y, gridSize) : y;
+  //   pushHistory(appendChild(tree, tree.id, newNode));
+  //   setDraggedBlockIndex(null);
+  // };
+
   const handleCanvasDrop = (e: React.DragEvent) => {
     e.preventDefault();
     if (draggedBlockIndex === null || !canvasRef.current) return;
+
     const canvasRect = canvasRef.current.getBoundingClientRect();
     const x = Math.max(0, (e.clientX - canvasRect.left) / zoom);
     const y = Math.max(0, (e.clientY - canvasRect.top) / zoom);
+
+    // 🔥 Detectar nodo destino bajo el cursor
+    let targetNodeId = tree.id; // fallback al root
+    const elementsUnder = document.elementsFromPoint(e.clientX, e.clientY);
+    for (const el of elementsUnder) {
+      const id = el.getAttribute?.("data-node-id");
+      if (id && id !== tree.id) {
+        const node = findNode(tree, id);
+        if (node && !["img", "br", "input"].includes(node.tag)) {
+          targetNodeId = id;
+          break;
+        }
+      }
+    }
+
     const newNode = BLOCKS[draggedBlockIndex].make();
     newNode.x = snap ? snapToGrid(x, gridSize) : x;
     newNode.y = snap ? snapToGrid(y, gridSize) : y;
-    pushHistory(appendChild(tree, tree.id, newNode));
+
+    pushHistory(appendChild(tree, targetNodeId, newNode));
     setDraggedBlockIndex(null);
   };
-
   // === Render Node ===
-  const renderNode = (node: VNode): React.ReactNode => {
+  // const renderNode = (node: VNode): React.ReactNode => {
+  //   const isSelected = selectedIds.has(node.id);
+  //   const positionStyle =
+  //     node.id !== tree.id
+  //       ? {
+  //           position: "absolute" as const,
+  //           left: node.x,
+  //           top: node.y,
+  //           width: node.width || "auto",
+  //           height: node.height || "auto",
+  //           zIndex: node.zIndex || (isSelected ? 1000 : 1),
+  //         }
+  //       : undefined;
+
+  //   const element = React.createElement(
+  //     node.tag,
+  //     {
+  //       key: node.id,
+  //       "data-node-id": node.id,
+  //       className: `${node.attrs.class || ""} ${!previewMode && isSelected ? "ring-2 ring-indigo-500" : ""}`,
+  //       style: {
+  //         ...positionStyle,
+  //         ...(node.text != null && !previewMode ? { outline: "none" } : {}),
+  //       },
+  //       ...(node.text != null && !previewMode
+  //         ? {
+  //             contentEditable: true,
+  //             suppressContentEditableWarning: true,
+  //             onBlur: (e: any) => {
+  //               const text = e.currentTarget.textContent || "";
+  //               setTree((currentTree) =>
+  //                 updateNode(currentTree, node.id, (n) => (n.text = text)),
+  //               );
+  //             },
+  //           }
+  //         : {}),
+  //       ...Object.fromEntries(
+  //         Object.entries(node.attrs).filter(([k]) => k !== "class"),
+  //       ),
+  //     },
+  //     node.text != null
+  //       ? node.text
+  //       : node.children.map((child) => renderNode(child)),
+  //   );
+
+  //   if (previewMode || node.id === tree.id) return element;
+
+  //   return (
+  //     <div key={node.id} className="relative">
+  //       {element}
+  //       {isSelected && (
+  //         <>
+  //           {["nw", "ne", "sw", "se", "n", "s", "e", "w"].map((handle) => (
+  //             <div
+  //               key={handle}
+  //               data-resize-handle={handle}
+  //               className={`absolute w-2 h-2 bg-indigo-500 border border-white rounded-sm cursor-${
+  //                 handle.includes("n") && handle.includes("w")
+  //                   ? "nw-resize"
+  //                   : handle.includes("n") && handle.includes("e")
+  //                     ? "ne-resize"
+  //                     : handle.includes("s") && handle.includes("w")
+  //                       ? "sw-resize"
+  //                       : handle.includes("s") && handle.includes("e")
+  //                         ? "se-resize"
+  //                         : handle.includes("n") || handle.includes("s")
+  //                           ? "ns-resize"
+  //                           : "ew-resize"
+  //               }`}
+  //               style={{
+  //                 left: handle.includes("w")
+  //                   ? -4
+  //                   : handle.includes("e")
+  //                     ? (node.width || 100) - 4
+  //                     : (node.width || 100) / 2 - 4,
+  //                 top: handle.includes("n")
+  //                   ? -4
+  //                   : handle.includes("s")
+  //                     ? (node.height || 50) - 4
+  //                     : (node.height || 50) / 2 - 4,
+  //               }}
+  //             />
+  //           ))}
+  //           <div className="absolute -top-6 left-0 text-xs bg-indigo-600 text-white px-2 py-1 rounded">
+  //             {node.tag}
+  //           </div>
+  //         </>
+  //       )}
+  //     </div>
+  //   );
+  // };
+
+  const renderNode = (
+    node: VNode,
+    parentBounds?: { x: number; y: number },
+  ): React.ReactNode => {
     const isSelected = selectedIds.has(node.id);
+    const bounds = getNodeBounds(node);
     const positionStyle =
       node.id !== tree.id
         ? {
@@ -351,13 +637,39 @@ export function HtmlCanvasBuilder() {
             zIndex: node.zIndex || (isSelected ? 1000 : 1),
           }
         : undefined;
+    if (node.tag === "text") {
+      return node.text; // se renderiza directo como string
+    }
+
+    // Elementos void (self-closing) en HTML
+    const voidElements = new Set([
+      "img",
+      "input",
+      "br",
+      "hr",
+      "meta",
+      "link",
+      "area",
+      "base",
+      "col",
+      "embed",
+      "source",
+      "track",
+      "wbr",
+    ]);
+
+    const isVoidElement = ["img", "input", "br", "hr", "meta", "link"].includes(
+      node.tag,
+    );
 
     const element = React.createElement(
       node.tag,
       {
         key: node.id,
         "data-node-id": node.id,
-        className: `${node.attrs.class || ""} ${!previewMode && isSelected ? "ring-2 ring-indigo-500" : ""}`,
+        className: `${node.attrs.class || ""} ${
+          !previewMode && isSelected ? "ring-2 ring-sky-500" : ""
+        }`,
         style: {
           ...positionStyle,
           ...(node.text != null && !previewMode ? { outline: "none" } : {}),
@@ -369,7 +681,9 @@ export function HtmlCanvasBuilder() {
               onBlur: (e: any) => {
                 const text = e.currentTarget.textContent || "";
                 setTree((currentTree) =>
-                  updateNode(currentTree, node.id, (n) => (n.text = text)),
+                  updateNode(currentTree, node.id, (n) => {
+                    n.text = text;
+                  }),
                 );
               },
             }
@@ -378,12 +692,16 @@ export function HtmlCanvasBuilder() {
           Object.entries(node.attrs).filter(([k]) => k !== "class"),
         ),
       },
-      node.text != null
-        ? node.text
-        : node.children.map((child) => renderNode(child)),
+      !isVoidElement
+        ? node.text != null
+          ? node.text
+          : node.children.map((child) => renderNode(child))
+        : undefined,
     );
 
-    if (previewMode || node.id === tree.id) return element;
+    if (previewMode || node.id === tree.id) {
+      return element;
+    }
 
     return (
       <div key={node.id} className="relative">
@@ -411,17 +729,37 @@ export function HtmlCanvasBuilder() {
                   left: handle.includes("w")
                     ? -4
                     : handle.includes("e")
-                      ? (node.width || 100) - 4
-                      : (node.width || 100) / 2 - 4,
+                      ? bounds.width - 4
+                      : bounds.width / 2 - 4,
                   top: handle.includes("n")
                     ? -4
                     : handle.includes("s")
-                      ? (node.height || 50) - 4
-                      : (node.height || 50) / 2 - 4,
+                      ? bounds.height - 4
+                      : bounds.height / 2 - 4,
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  // if (!node) return;
+                  // const [nodeId, handle] = `${node.id}:${handle}`.split(":");
+                  setIsResizingElement(true);
+                  resizeData.current = {
+                    nodeId: node.id,
+                    handle,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    original: {
+                      x: node.x,
+                      y: node.y,
+                      width: node.width || 100,
+                      height: node.height || 50,
+                    },
+                  };
                 }}
               />
             ))}
-            <div className="absolute -top-6 left-0 text-xs bg-indigo-600 text-white px-2 py-1 rounded">
+            <div className="absolute -top-6 left-0 text-xs bg-sky-600 text-white px-2 py-1 rounded">
               {node.tag}
             </div>
           </>
