@@ -6,7 +6,7 @@ import { GlobalErrorProvider } from "./providers/globalError/GlobalErrorProvider
 import { GlobalErrorNotifications } from "./components/global/error/GlobalErrorNotifications";
 import { useGlobalErrors } from "./providers/globalError/use-globalError";
 import { useGlobalErrorHandler } from "./providers/globalError/use-globalErrorHandler";
-import { HtmlCanvasBuilder } from "@/components/canvas/HtmlCanvasBuilder";
+import HtmlCanvasBuilder from "./components/htmlBuilder/HtmlCanvasBuilder";
 
 const isDevelopment = `${new URL(window.location.href).origin}`
   .trim()
