@@ -192,6 +192,18 @@ const safeDecodeURIComponent = (str: string): string => {
   }
 };
 
+const HAS_ENCODED_CHARS = /%[0-9a-fA-F]{2}/;
+
+export const smartDecodeURIComponent = (str: string): string => {
+  if (typeof str !== "string") return String(str);
+  if (!HAS_ENCODED_CHARS.test(str)) return str;
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str; 
+  }
+};
+
 export const vnodeToEditableHtml = (
   node: VNode,
   isEditable: boolean,
@@ -210,10 +222,9 @@ export const vnodeToEditableHtml = (
   }
 
   // Handle text content
-  let finalText = "";
+  let finalText = node.text != null ? String(node.text) : "";
   if (node.text != null) {
-    // First, try to decode if it's URL-encoded
-    finalText = safeDecodeURIComponent(String(node.text));
+    finalText = smartDecodeURIComponent(finalText);
   }
 
   // Make text containers editable
