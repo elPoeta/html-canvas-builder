@@ -40,7 +40,7 @@ interface CanvasContextMenuProps {
 }
 
 export type CanvasContextMenuHandle = {
-  show: (vnode: VNode, rect: DOMRect) => void;
+  show: (vnode: VNode, x: number, y: number) => void;
 };
 
 export const CanvasContextMenu = forwardRef<
@@ -68,8 +68,14 @@ export const CanvasContextMenu = forwardRef<
     const blocksByCategory = groupBy(BLOCKS, (block) => block.category);
 
     useImperativeHandle(ref, () => ({
-      show(v: VNode, rect: DOMRect) {
-        setPosition({ x: rect.left, y: rect.top - 32 });
+      show(v: VNode, x: number, y: number) {
+        const menuWidth = 224; // ~w-56 in pixels
+        const menuHeight = 300; // estimate or measure dynamically
+
+        const adjustedX = Math.min(x, window.innerWidth - menuWidth - 10);
+        const adjustedY = Math.min(y, window.innerHeight - menuHeight - 10);
+
+        setPosition({ x: adjustedX, y: adjustedY });
         setVnode(v);
         setOpen(true);
       },
