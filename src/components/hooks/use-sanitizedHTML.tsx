@@ -61,6 +61,12 @@ export const DEFAULT_OPTIONS: Config = {
     "animateTransform",
     "animateMotion",
     "set",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
   ],
   FORBID_TAGS: ["script", "html", "head", "meta", "body", "link", "style"],
   ALLOWED_ATTR: [
