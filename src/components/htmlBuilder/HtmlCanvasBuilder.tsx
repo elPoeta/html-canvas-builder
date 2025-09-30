@@ -93,27 +93,6 @@ export default function HtmlCanvasBuilder() {
     // loadProject: loadProjectHook,
   } = useProjects();
 
-  // useEffect(() => {
-  //   if (!selectedId) return;
-
-  //   const layerElement = document.querySelector(
-  //     `[data-node-id="${selectedId}"]`,
-  //   );
-  //   const canvasElement = document.querySelector(`[data-node="${selectedId}"]`);
-
-  //   if (layerElement) {
-  //     setTimeout(() => {
-  //       layerElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  //     }, 50);
-  //   }
-
-  //   if (canvasElement) {
-  //     setTimeout(() => {
-  //       canvasElement.scrollIntoView({ behavior: "smooth", block: "center" });
-  //     }, 50);
-  //   }
-  // }, [selectedId]);
-
   useEffect(() => {
     if (!selectedId) return;
 
@@ -146,18 +125,6 @@ export default function HtmlCanvasBuilder() {
     });
 
     return () => cancelAnimationFrame(timer);
-  }, [selectedId]);
-
-  useEffect(() => {
-    console.log("Selected ID changed:", selectedId);
-    if (!selectedId) return;
-    const layerEl = document.querySelector(`[data-node-id="${selectedId}"]`);
-    console.log("Found layer element:", layerEl);
-    if (layerEl) {
-      requestAnimationFrame(() =>
-        layerEl.scrollIntoView({ behavior: "smooth", block: "nearest" }),
-      );
-    }
   }, [selectedId]);
 
   // Datos derivados
@@ -203,48 +170,6 @@ export default function HtmlCanvasBuilder() {
   const moveNodeInTree = (nodeId: string, direction: "up" | "down") => {
     pushHistory(moveNodeInTreeUtil(tree, nodeId, direction));
   };
-
-  // const moveNodeInTree = (nodeId: string, direction: "up" | "down") => {
-  //   const index = layers.findIndex((l) => l.id === nodeId);
-  //   if (index === -1) return;
-
-  //   const newIndex = direction === "up" ? index - 1 : index + 1;
-  //   if (newIndex < 0 || newIndex >= layers.length) return;
-
-  //   const targetId = layers[index].id;
-  //   const swapId = layers[newIndex].id;
-
-  //   // Encontrar al padre común
-  //   let parent: VNode | null = null;
-  //   const findParent = (n: VNode): boolean => {
-  //     for (const child of n.children) {
-  //       if (child.id === targetId || child.id === swapId) {
-  //         if (
-  //           n.children.some((c) => c.id === targetId) &&
-  //           n.children.some((c) => c.id === swapId)
-  //         ) {
-  //           parent = n;
-  //           return true;
-  //         }
-  //       }
-  //       if (findParent(child)) return true;
-  //     }
-  //     return false;
-  //   };
-  //   findParent(tree);
-  //   if (!parent) return;
-
-  //   // Intercambiar en el padre
-  //   const newChildren = [...parent.children];
-  //   const i1 = newChildren.findIndex((c) => c.id === targetId);
-  //   const i2 = newChildren.findIndex((c) => c.id === swapId);
-  //   [newChildren[i1], newChildren[i2]] = [newChildren[i2], newChildren[i1]];
-
-  //   const newTree = updateNode(tree, parent.id, (n) => {
-  //     n.children = newChildren;
-  //   });
-  //   pushHistory(newTree);
-  // };
 
   const deleteNodeFromTree = (nodeId: string) => {
     if (nodeId === tree.id) return;
@@ -356,8 +281,8 @@ export default function HtmlCanvasBuilder() {
         {/* Panel izquierdo */}
         <ResizablePanel
           defaultWidth={leftPanelWidth}
-          minWidth={250}
-          maxWidth={500}
+          minWidth={200}
+          maxWidth={700}
           onWidthChange={setLeftPanelWidth}
           className="bg-white/70 backdrop-blur-sm"
         >
@@ -404,12 +329,12 @@ export default function HtmlCanvasBuilder() {
 
         {/* Panel derecho */}
         <ResizablePanel
-          side="right"
           defaultWidth={rightPanelWidth}
-          minWidth={250}
-          maxWidth={500}
+          minWidth={200}
+          maxWidth={700}
           onWidthChange={setRightPanelWidth}
-          className="bg-white/70 backdrop-blur-sm"
+          className="bg-white/70 backdrop-blur-sm overflow-hidden"
+          side="right"
         >
           <PropertiesPanel
             selectedNode={selectedNode}

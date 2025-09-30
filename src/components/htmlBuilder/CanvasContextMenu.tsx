@@ -102,7 +102,7 @@ export const CanvasContextMenu = forwardRef<
           <DropdownMenuTrigger asChild>
             <div className="h-6 px-3 flex items-center gap-1.5 rounded-lg bg-indigo-600 text-white text-xs shadow-lg cursor-pointer hover:bg-indigo-700 transition-colors">
               <Settings className="h-3 w-3" />
-              <span className="font-medium">config</span>
+              <span className="font-medium">{vnode.tag}</span>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">

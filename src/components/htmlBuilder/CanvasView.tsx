@@ -156,6 +156,21 @@ export const CanvasView = ({
       .querySelectorAll("[data-node].ce-selected")
       .forEach((el) => el.classList.remove("ce-selected"));
 
+    if (dashBox) {
+      container.querySelectorAll("[data-node]").forEach((el) => {
+        (el as HTMLElement).style.borderWidth = "1px";
+        (el as HTMLElement).style.borderStyle = "dashed";
+        (el as HTMLElement).style.borderColor =
+          "var(--border-muted-foreground)";
+      });
+    } else {
+      container.querySelectorAll("[data-node]").forEach((el) => {
+        (el as HTMLElement).style.removeProperty("border-width");
+        (el as HTMLElement).style.removeProperty("border-style");
+        (el as HTMLElement).style.removeProperty("border-color");
+      });
+    }
+
     // Add selection
     if (selectedId) {
       const el = container.querySelector(`[data-node="${selectedId}"]`);
@@ -163,7 +178,7 @@ export const CanvasView = ({
         el.classList.add("ce-selected");
       }
     }
-  }, [selectedId]);
+  }, [selectedId, dashBox]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 p-4 overflow-auto">

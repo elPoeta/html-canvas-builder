@@ -12,8 +12,8 @@ export interface ResizablePanelProps {
 export const ResizablePanel = ({
   children,
   className = "",
-  minWidth = 250,
-  maxWidth = 600,
+  minWidth = 200,
+  maxWidth = 720,
   defaultWidth = 300,
   onWidthChange,
   side = "left",

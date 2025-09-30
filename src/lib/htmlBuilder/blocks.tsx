@@ -513,7 +513,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "max-w-4xl mx-auto px-4" },
+      attrs: { class: "max-w-4xl mx-auto px-4 py-6" },
       children: [],
     }),
   },
@@ -535,7 +535,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "article",
-      attrs: { class: "prose prose-gray max-w-none" },
+      attrs: { class: "prose prose-gray max-w-none py-6" },
       children: [],
     }),
   },
@@ -546,7 +546,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "header",
-      attrs: { class: "bg-white shadow-sm border-b" },
+      attrs: { class: "bg-white shadow-sm border-b py-6" },
       children: [],
     }),
   },
@@ -568,7 +568,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "nav",
-      attrs: { class: "flex space-x-6" },
+      attrs: { class: "flex space-x-6 p-6" },
       children: [],
     }),
   },
@@ -601,7 +601,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "flex gap-4 items-center" },
+      attrs: { class: "flex gap-4 items-center p-6" },
       children: [],
     }),
   },
@@ -612,7 +612,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "flex flex-col gap-4" },
+      attrs: { class: "flex flex-col gap-4 p-6" },
       children: [],
     }),
   },
@@ -623,7 +623,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "grid grid-cols-2 gap-4" },
+      attrs: { class: "grid grid-cols-2 gap-4 p-6" },
       children: [],
     }),
   },
@@ -634,7 +634,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "grid grid-cols-3 gap-4" },
+      attrs: { class: "grid grid-cols-3 gap-4 p-6" },
       children: [],
     }),
   },
@@ -645,7 +645,7 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "grid grid-cols-4 gap-4" },
+      attrs: { class: "grid grid-cols-4 gap-4 p-6" },
       children: [],
     }),
   },
@@ -656,7 +656,9 @@ export const BLOCKS: Block[] = [
     make: () => ({
       id: uid(),
       tag: "div",
-      attrs: { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" },
+      attrs: {
+        class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6",
+      },
       children: [],
     }),
   },

@@ -38,30 +38,6 @@ function generateColorMap(names: string[], shades: number[]) {
   return colorMap;
 }
 const colors = generateColorMap(colorNames, colorShades);
-//   {
-//   slate: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   gray: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   zinc: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   neutral: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   stone: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   red: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   orange: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   amber: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   yellow: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   lime: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   green: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   emerald: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   teal: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   cyan: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   sky: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   blue: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   indigo: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   violet: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   purple: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   fuchsia: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   pink: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-//   rose: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
-// };
 
 const colorPrefixes = [
   "text",
@@ -172,14 +148,14 @@ const displays = [
   "hidden",
 ];
 
-const HOVER_PREFIXES = [
-  "bg",
-  "text",
-  "border",
-  "shadow",
-  "scale",
-  "opacity",
-] as const;
+// const HOVER_PREFIXES = [
+//   "bg",
+//   "text",
+//   "border",
+//   "shadow",
+//   "scale",
+//   "opacity",
+// ] as const;
 const HOVER_SHADOWS = ["sm", "md", "lg", "xl", "2xl"] as const;
 const HOVER_SCALES = [90, 95, 100, 105, 110, 125] as const;
 const HOVER_OPACITIES = [0, 20, 40, 60, 80, 100] as const;
@@ -633,3 +609,59 @@ export const fuzzySearch = (items: TailwindClass[], query: string) => {
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score);
 };
+
+export function getClassCategory(className: string): string | null {
+  const prefixes = [
+    "text-",
+    "bg-",
+    "border-",
+    "placeholder-",
+    "ring-",
+    "shadow-",
+    "font-",
+    "rounded-",
+    "p-",
+    "px-",
+    "py-",
+    "pt-",
+    "pr-",
+    "pb-",
+    "pl-",
+    "m-",
+    "mx-",
+    "my-",
+    "mt-",
+    "mr-",
+    "mb-",
+    "ml-",
+    "w-",
+    "h-",
+    "min-w-",
+    "min-h-",
+    "max-w-",
+    "max-h-",
+    "gap-",
+    "flex-",
+    "justify-",
+    "items-",
+    "align-",
+    "grid-",
+    "space-",
+  ];
+
+  for (const prefix of prefixes) {
+    if (className.startsWith(prefix)) {
+      if (prefix.startsWith("p") || prefix.startsWith("m")) {
+        return prefix[0]; // 'p' or 'm'
+      }
+      if (prefix.startsWith("rounded")) return "rounded";
+      if (prefix.startsWith("font")) return "font";
+      if (prefix.startsWith("text")) return "text";
+      if (prefix.startsWith("bg")) return "bg";
+      if (prefix.startsWith("border")) return "border";
+      if (prefix.startsWith("shadow")) return "shadow";
+      return prefix.replace(/-$/, "");
+    }
+  }
+  return className;
+}
