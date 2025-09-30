@@ -130,9 +130,8 @@ export const CanvasView = ({
         e.preventDefault();
         const id = nodeEl.getAttribute("data-node");
         if (id) {
-          const rect = nodeEl.getBoundingClientRect();
           const vnode = findVNodeById(tree, id);
-          vnode && contextMenuRef.current?.show(vnode, rect);
+          vnode && contextMenuRef.current?.show(vnode, e.clientX, e.clientY);
         }
       }
     };
